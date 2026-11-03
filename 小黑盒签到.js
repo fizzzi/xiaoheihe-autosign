@@ -274,41 +274,6 @@ async function getHkey(heyboxId, type, taskName = "null") {
   }
 }
 
-async function follow(account) {
-  const [heyboxId, accountCookie] = account.split("#");
-  const hkeyInfo = await getHkey(heyboxId, 3);
-  if (!hkeyInfo) {
-    return null;
-  }
-  const { hkey, timestamp } = hkeyInfo;
-
-  const options = {
-    headers: {
-      Referer: BASE_APP_REFERER,
-      "User-Agent": USER_AGENT,
-      Host: API_HOST,
-      Connection: "Keep-Alive",
-      Accept: "*/*",
-      Cookie: accountCookie,
-    },
-    timeout: 5000,
-  };
-
-  try {
-    const response = await axios.post(
-      `https://api.xiaoheihe.cn/bbs/app/profile/follow/user?heybox_id=${heyboxId}` +
-        `${DEVICE_QUERY}&nonce=l7iQ8IQMHzj3hSydLxxsQMSzjnCvkiY3&hkey=${hkey}` +
-        `${COMMON_QUERY}${timestamp}${APP_QUERY}`,
-      "following_id=12318034",
-      options,
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error:", error);
-    return null;
-  }
-}
-
 async function getTaskList(account) {
   const [heyboxId, accountCookie] = account.split("#");
   const hkeyInfo = await getHkey(heyboxId, 2);
@@ -338,7 +303,7 @@ async function getTaskList(account) {
     );
     return response.data;
   } catch (error) {
-    console.error("Error:", error);
+    console.error("请求失败:", error.code || "NETWORK_ERROR", "HTTP", error.response?.status || "unknown");
     return null;
   }
 }
@@ -372,7 +337,7 @@ async function getSignIn(account) {
     );
     return response.data;
   } catch (error) {
-    console.error("Error:", error);
+    console.error("请求失败:", error.code || "NETWORK_ERROR", "HTTP", error.response?.status || "unknown");
     return null;
   }
 }
@@ -419,7 +384,7 @@ async function doTask(account, taskName) {
     );
     return response.data;
   } catch (error) {
-    console.error("Error:", error);
+    console.error("请求失败:", error.code || "NETWORK_ERROR", "HTTP", error.response?.status || "unknown");
     return null;
   }
 }
@@ -439,7 +404,6 @@ async function main() {
     const accountNo = index + 1;
     const accountLines = [];
 
-    await follow(account);
 
     console.log("--开始做签到任务--");
     const signResult = await getSignIn(account);
@@ -503,4 +467,4 @@ async function main() {
   }
 }
 
-main();
+main().catch((error) => { console.error("脚本执行失败:", error.code || "UNEXPECTED_ERROR"); process.exitCode = 1; });
